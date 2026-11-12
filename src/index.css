@@ -1,0 +1,205 @@
+@import "tailwindcss";
+
+@variant dark (&:where([data-theme=dark], [data-theme=dark] *, .dark, .dark *, html.dark, html.dark *, body.night, body.night *));
+
+:root {
+  --c1: #ffd5a8;
+  --c2: #ffae5e;
+  --c3: #f1893a;
+  --c4: #a85522;
+  --accent: #f1893a;
+  --accent-2: #c96f29;
+  --accent-soft: #ffe6d0;
+  --accent-deep: #a85522;
+  --bg-radial: #ffdcbb;
+  --bg-base: #fff1e3;
+  --ink: #2b1704;
+  --ink-2: #4a2808;
+  --muted: #8c6e54;
+  --line: #fae4cf;
+  --paper: #ffffff;
+  --paper-2: #fff8f0;
+  --violet: #8b5cf6;
+  --violet-2: #a78bfa;
+  --red: #ef4d54;
+  --red-2: #c93b41;
+  --amber: #f6a64a;
+  --blue: #5a8ed6;
+  --gold: #d4af37;
+  --gold-2: #f4d77a;
+  --grad-mint: linear-gradient(160deg, var(--c1) 0%, var(--c2) 45%, var(--c3) 100%);
+  --grad-deep: linear-gradient(160deg, var(--c3) 0%, var(--c4) 100%);
+  --grad-paper: linear-gradient(180deg, #ffffff 0%, #f6fbf7 100%);
+  --grad-gold: linear-gradient(135deg, #f4d77a 0%, #d4af37 50%, #8a6a1a 100%);
+  --shadow-lg: 0 30px 60px -25px rgba(0, 0, 0, 0.16), 0 8px 20px -10px rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 4px 14px -6px rgba(0, 0, 0, 0.12);
+}
+
+/* System Dark Mode Auto-detection when not explicitly overridden */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --ink: #f8fafc;
+    --ink-2: #e2e8f0;
+    --muted: #94a3b8;
+    --paper: #0b111e;
+    --paper-2: #131c2e;
+    --line: #1e293b;
+    --bg-radial: var(--dark-bg-radial, #111827);
+    --bg-base: var(--dark-bg-base, #030712);
+    --accent-soft: color-mix(in srgb, var(--accent) 18%, transparent);
+    --grad-paper: linear-gradient(180deg, var(--paper-2) 0%, var(--paper) 100%);
+    --shadow-lg: 0 30px 60px -25px rgba(0, 0, 0, 0.8), 0 8px 20px -10px rgba(0, 0, 0, 0.6);
+    --shadow-sm: 0 6px 16px -10px rgba(0, 0, 0, 0.8);
+  }
+}
+
+.dark, body.night, html.dark, :root[data-theme='dark'] {
+  --ink: #f8fafc;
+  --ink-2: #e2e8f0;
+  --muted: #94a3b8;
+  --paper: #0b111e;
+  --paper-2: #131c2e;
+  --line: #1e293b;
+  --bg-radial: var(--dark-bg-radial, #111827);
+  --bg-base: var(--dark-bg-base, #030712);
+  --accent-soft: color-mix(in srgb, var(--accent) 18%, transparent);
+  --grad-paper: linear-gradient(180deg, var(--paper-2) 0%, var(--paper) 100%);
+  --shadow-lg: 0 30px 60px -25px rgba(0, 0, 0, 0.8), 0 8px 20px -10px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 6px 16px -10px rgba(0, 0, 0, 0.8);
+}
+
+body.night.amoled, .dark.amoled, :root[data-theme='dark'].amoled {
+  --paper: #000000;
+  --paper-2: #090909;
+  --line: #161a18;
+  --bg-radial: #000000;
+  --bg-base: #000000;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  background: radial-gradient(1200px 600px at 50% -100px, var(--bg-radial) 0%, var(--bg-base) 60%);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  transition: background 0.5s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease;
+}
+
+/* Premium Apple iOS Dynamic Scrollbar with Glow Animation */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 9999px;
+  transition: background 0.3s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--accent) 70%, transparent);
+  box-shadow: 0 0 10px var(--accent);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 30%, transparent) transparent;
+}
+
+/* Dynamic Text & Liquid iOS Animations */
+@keyframes textShimmer {
+  0%, 100% {
+    filter: drop-shadow(0 0 0px transparent);
+  }
+  50% {
+    filter: drop-shadow(0 0 12px color-mix(in srgb, var(--accent) 60%, transparent));
+  }
+}
+
+@keyframes floatFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-text-shimmer {
+  animation: textShimmer 3.2s ease-in-out infinite;
+}
+
+.animate-fade-up {
+  animation: floatFadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent), 0 6px 14px -6px color-mix(in srgb, var(--accent) 70%, transparent);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 14px transparent, 0 6px 24px -2px color-mix(in srgb, var(--accent) 95%, transparent);
+  }
+}
+
+@keyframes shineMove {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@keyframes marqueeSlide {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marqueeSlide 20s linear infinite;
+}
+
+.animate-pulse-dot {
+  animation: pulseDot 1.4s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 1.6s ease-in-out infinite;
+}
+
+.animate-shine {
+  background-size: 200% 100%;
+  animation: shineMove 4s linear infinite;
+}
+
+/* Flip number cards */
+.flip-card {
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.15);
+}
+
+/* Glass panel */
+.ios-glass {
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+}
+
+/* Hardware accelerated layer */
+.will-change-transform {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+

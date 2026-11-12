@@ -1,0 +1,6 @@
+{
+  "name": "NOVEXA AI — WinGo Prediction",
+  "description": "Premium iOS-inspired WinGo Prediction Engine featuring NOVEXA AI neural ensemble analysis, liquid motion aesthetics, live countdown, Firebase real authentication, and multi-theme customization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,1103 @@
+Act as an expert Full-Stack Backend Developer. I am building an advanced prediction system called NY_FUSION_PREDICTIOR and I need to integrate my custom prediction engine perfectly into Server 3.
+​Here is my current custom pattern engine logic for predicting BIG (5-9) or SMALL (0-4) outcomes based on historical game arrays:
+​[// ============================================================
+// CPU_PATTERN_DB — 200+ hardcoded patterns (3–9 length)
+// Real-data calibrated from 43,200+ WinGo rounds
+// ============================================================
+
+const CPU_PATTERN_DB = {
+    // ── 3-length patterns ──
+    BBB: { next: "SMALL", conf: 82 },
+    SSS: { next: "BIG", conf: 82 },
+    BBS: { next: "SMALL", conf: 70 },
+    SSB: { next: "BIG", conf: 70 },
+    BSS: { next: "BIG", conf: 68 },
+    SBB: { next: "SMALL", conf: 68 },
+    BSB: { next: "SMALL", conf: 63 },
+    SBS: { next: "BIG", conf: 63 },
+
+    // ── 4-length patterns ──
+    BBBB: { next: "SMALL", conf: 88 },
+    SSSS: { next: "BIG", conf: 88 },
+    BBBS: { next: "SMALL", conf: 84 },
+    SSSB: { next: "BIG", conf: 84 },
+    BBSS: { next: "SMALL", conf: 76 },
+    SSBB: { next: "BIG", conf: 76 },
+    BSBS: { next: "BIG", conf: 62 },
+    SBSB: { next: "SMALL", conf: 62 },
+    BSSB: { next: "BIG", conf: 68 },
+    SBBS: { next: "SMALL", conf: 68 },
+    BSBB: { next: "SMALL", conf: 68 },
+    SBSS: { next: "BIG", conf: 68 },
+    BBSB: { next: "SMALL", conf: 72 },
+    SSBS: { next: "BIG", conf: 72 },
+    BSSS: { next: "BIG", conf: 80 },
+    SBBB: { next: "SMALL", conf: 80 },
+
+    // ── 5-length patterns ──
+    BBBBB: { next: "SMALL", conf: 90 },
+    SSSSS: { next: "BIG", conf: 90 },
+    BBBBS: { next: "SMALL", conf: 86 },
+    SSSSB: { next: "BIG", conf: 86 },
+    BBBSS: { next: "SMALL", conf: 76 },
+    SSSBB: { next: "BIG", conf: 76 },
+    BSBSB: { next: "BIG", conf: 62 },
+    SBSBS: { next: "SMALL", conf: 62 },
+    BBSSB: { next: "SMALL", conf: 70 },
+    SSBBS: { next: "BIG", conf: 70 },
+    BSSBB: { next: "SMALL", conf: 70 },
+    SBBSS: { next: "BIG", conf: 70 },
+    BSSSS: { next: "BIG", conf: 84 },
+    SBBBB: { next: "SMALL", conf: 84 },
+    BBBSB: { next: "SMALL", conf: 78 },
+    SSSBS: { next: "BIG", conf: 78 },
+    BSBBS: { next: "BIG", conf: 66 },
+    SBSSB: { next: "SMALL", conf: 66 },
+
+    // ── 6-length patterns ──
+    BBBBBB: { next: "SMALL", conf: 92 },
+    SSSSSS: { next: "BIG", conf: 92 },
+    BBBSSS: { next: "SMALL", conf: 85 },
+    SSSBBB: { next: "BIG", conf: 85 },
+    BBSSBB: { next: "SMALL", conf: 83 },
+    SSBBSS: { next: "BIG", conf: 83 },
+    BSBSBS: { next: "BIG", conf: 74 },
+    SBSBSB: { next: "SMALL", conf: 74 },
+    BBBBSS: { next: "SMALL", conf: 86 },
+    SSSSBB: { next: "BIG", conf: 86 },
+    BBBBBS: { next: "SMALL", conf: 90 },
+    SSSSSB: { next: "BIG", conf: 90 },
+
+    // ── 7-length patterns ──
+    BBBBBBB: { next: "SMALL", conf: 93 },
+    SSSSSSS: { next: "BIG", conf: 93 },
+    BSBSBSB: { next: "BIG", conf: 76 },
+    SBSBSBS: { next: "SMALL", conf: 76 },
+    BBBSSSS: { next: "SMALL", conf: 76 },
+    SSSBBBB: { next: "BIG", conf: 76 },
+    BBBSSBB: { next: "SMALL", conf: 78 },
+    SSSBBSS: { next: "BIG", conf: 78 },
+    BBBBSSS: { next: "SMALL", conf: 86 },
+    SSSSBBB: { next: "BIG", conf: 86 },
+
+    // ── 8-length patterns ──
+    BBBBBBBB: { next: "SMALL", conf: 96 },
+    SSSSSSSS: { next: "BIG", conf: 96 },
+    BSBSBSBS: { next: "BIG", conf: 78 },
+    SBSBSBSB: { next: "SMALL", conf: 78 },
+    BBBBSSSS: { next: "SMALL", conf: 86 },
+    SSSSBBBB: { next: "BIG", conf: 86 },
+    BBSSBBSS: { next: "SMALL", conf: 85 },
+    SSBBSSBB: { next: "BIG", conf: 85 },
+    BBBSSSBB: { next: "SMALL", conf: 86 },
+    SSSBBBSS: { next: "BIG", conf: 86 },
+    BBBBBBSS: { next: "SMALL", conf: 90 },
+    SSSSSSBB: { next: "BIG", conf: 90 },
+
+    // ── DRAGON / EXTREME STREAKS ──
+    BBBBBBS: { next: "SMALL", conf: 94 },
+    SSSSSSB: { next: "BIG", conf: 94 },
+    BBBBBBBS: { next: "SMALL", conf: 96 },
+    SSSSSSSB: { next: "BIG", conf: 96 },
+    BBBBBBBBB: { next: "SMALL", conf: 99 },
+    SSSSSSSSS: { next: "BIG", conf: 99 },
+    BBBBBBBBBB: { next: "SMALL", conf: 99 },
+    SSSSSSSSSS: { next: "BIG", conf: 99 },
+    BBBBBBBBBBB: { next: "SMALL", conf: 99 },
+    SSSSSSSSSSS: { next: "BIG", conf: 99 },
+
+    // ── TREND INJECTION: BBBSBS family ──
+    BBBSBS: { next: "SMALL", conf: 78 },
+    SSSBSB: { next: "BIG", conf: 78 },
+    BBBSBSB: { next: "SMALL", conf: 79 },
+    SSSBSBS: { next: "BIG", conf: 79 },
+    BBBSBSS: { next: "SMALL", conf: 80 },
+    SSSBSBB: { next: "BIG", conf: 80 },
+    BBBBSBS: { next: "SMALL", conf: 83 },
+    SSSSBSB: { next: "BIG", conf: 83 },
+    BBBBBSBS: { next: "SMALL", conf: 86 },
+    SSSSSBSB: { next: "BIG", conf: 86 },
+    BBBSBSBS: { next: "SMALL", conf: 81 },
+    SSSBSBSB: { next: "BIG", conf: 81 },
+    BBSBS: { next: "SMALL", conf: 70 },
+    SSBSB: { next: "BIG", conf: 70 },
+    BBSBSB: { next: "SMALL", conf: 72 },
+    SSBSBS: { next: "BIG", conf: 72 },
+
+    // ── SINGLE-BREAK / STUTTER ──
+    BBBSB: { next: "SMALL", conf: 72 },
+    SSSBS: { next: "BIG", conf: 72 },
+    BBBBSB: { next: "SMALL", conf: 79 },
+    SSSSBS: { next: "BIG", conf: 79 },
+    BBBSBB: { next: "SMALL", conf: 74 },
+    SSSSBBB: { next: "BIG", conf: 80 },
+    BBSBB: { next: "SMALL", conf: 68 },
+    SSBSS: { next: "BIG", conf: 68 },
+    BBBSBBB: { next: "SMALL", conf: 86 },
+    SSSSBSS: { next: "BIG", conf: 80 },
+    BBBBSBB: { next: "SMALL", conf: 83 },
+    SSSSBSSS: { next: "BIG", conf: 83 },
+    BBBSBBBB: { next: "SMALL", conf: 87 },
+    SSSBSSSS: { next: "BIG", conf: 87 },
+
+    // ── PULSE / REBOUND ──
+    SBBBBB: { next: "SMALL", conf: 73 },
+    BSSSSS: { next: "BIG", conf: 73 },
+    SBBBB: { next: "SMALL", conf: 70 },
+    BSSSS: { next: "BIG", conf: 70 },
+    SBBB: { next: "SMALL", conf: 67 },
+    BSSS: { next: "BIG", conf: 67 },
+
+    // ── TRAP / SANDWICH ──
+    BBSBB: { next: "SMALL", conf: 71 },
+    SSBSS: { next: "BIG", conf: 71 },
+    BBBSBB: { next: "SMALL", conf: 76 },
+    SSSBS: { next: "BIG", conf: 76 },
+    BBBSBBB: { next: "SMALL", conf: 80 },
+    SSSSBSS: { next: "BIG", conf: 80 },
+    BSSB: { next: "BIG", conf: 68 },
+    SBBS: { next: "SMALL", conf: 68 },
+    BSSSB: { next: "BIG", conf: 72 },
+    SBBBS: { next: "SMALL", conf: 72 },
+    BSSSSB: { next: "BIG", conf: 75 },
+    SBBBBS: { next: "SMALL", conf: 75 },
+
+    // ── PENDULUM / MIRROR ──
+    BBSSBB: { next: "SMALL", conf: 83 },
+    SSBBSS: { next: "BIG", conf: 83 },
+    BBBSSSB: { next: "BIG", conf: 78 },
+    SSSBBBS: { next: "SMALL", conf: 78 },
+    BSSBBS: { next: "SMALL", conf: 72 },
+    SBBBSB: { next: "BIG", conf: 72 },
+    BBSSSBB: { next: "SMALL", conf: 78 },
+    SSBBBSS: { next: "BIG", conf: 78 },
+
+    // ── TWIN-PULSE ──
+    BBSBS: { next: "SMALL", conf: 67 },
+    SSBSB: { next: "BIG", conf: 67 },
+    BSBBS: { next: "BIG", conf: 66 },
+    SBSSB: { next: "SMALL", conf: 66 },
+    BSBBSB: { next: "SMALL", conf: 68 },
+    SBSSBS: { next: "BIG", conf: 68 },
+
+    // ── WAVE / FADE ──
+    SBBBSS: { next: "BIG", conf: 69 },
+    BSSBB: { next: "SMALL", conf: 69 },
+    SSSBBBS: { next: "BIG", conf: 76 },
+    BBBSSBS: { next: "SMALL", conf: 76 },
+    BBBBBSSBB: { next: "SMALL", conf: 82 },
+    SSSSSBSSBB: { next: "BIG", conf: 82 },
+
+    // ── CLUSTER-JUMP ──
+    BBBBBSSS: { next: "SMALL", conf: 88 },
+    SSSSSBB: { next: "BIG", conf: 86 },
+    BSBBB: { next: "SMALL", conf: 70 },
+    SBSSS: { next: "BIG", conf: 70 },
+    BBSBS: { next: "SMALL", conf: 67 },
+    SSBSB: { next: "BIG", conf: 67 },
+    BBBSSB: { next: "SMALL", conf: 78 },
+    BBSBSS: { next: "BIG", conf: 66 },
+    SSBSBB: { next: "SMALL", conf: 66 },
+    BBSBSB: { next: "SMALL", conf: 64 },
+    SSBSBS: { next: "BIG", conf: 64 },
+
+    // ── ECHO ──
+    BSBSB: { next: "SMALL", conf: 65 },
+    SBSBS: { next: "BIG", conf: 65 },
+    BSBBSBB: { next: "SMALL", conf: 70 },
+    SBSSBS: { next: "BIG", conf: 70 },
+
+    // ── COMPLETE COVERAGE (len 3-8 auto-generated) ──
+    BSBBB: { next: "SMALL", conf: 70 },
+    SBSSS: { next: "BIG", conf: 70 },
+    BBBSSB: { next: "SMALL", conf: 78 },
+    BBSBSS: { next: "BIG", conf: 66 },
+    SSBSBB: { next: "SMALL", conf: 66 },
+    BBSBSB: { next: "SMALL", conf: 64 },
+    SSBSBS: { next: "BIG", conf: 64 },
+    BBBBBSSSS: { next: "SMALL", conf: 88 },
+    SSSSSBBBB: { next: "BIG", conf: 88 },
+    SSSSSBBB: { next: "BIG", conf: 88 },
+    BBBBBSSS: { next: "SMALL", conf: 88 },
+    BBSBB: { next: "SMALL", conf: 68 },
+    BBSSS: { next: "SMALL", conf: 70 },
+    BSBSS: { next: "SMALL", conf: 64 },
+    BSSBS: { next: "BIG", conf: 66 },
+    BSSSB: { next: "SMALL", conf: 64 },
+    SBBBS: { next: "BIG", conf: 64 },
+    SBBSB: { next: "SMALL", conf: 66 },
+    SBSBB: { next: "BIG", conf: 64 },
+    SSBBB: { next: "SMALL", conf: 70 },
+    SSBSS: { next: "BIG", conf: 68 },
+    BBBBSB: { next: "SMALL", conf: 84 },
+    BBBSBB: { next: "SMALL", conf: 78 },
+    BBBSBS: { next: "SMALL", conf: 78 },
+    BBSBBB: { next: "BIG", conf: 70 },
+    BBSBBS: { next: "SMALL", conf: 68 },
+    BBSSBS: { next: "SMALL", conf: 70 },
+    BBSSSB: { next: "SMALL", conf: 70 },
+    BBSSSS: { next: "SMALL", conf: 70 },
+    BSBBBB: { next: "SMALL", conf: 68 },
+    BSBBBS: { next: "SMALL", conf: 64 },
+    BSBBSB: { next: "SMALL", conf: 64 },
+    BSBBSS: { next: "SMALL", conf: 64 },
+    BSBSBB: { next: "SMALL", conf: 72 },
+    BSBSSB: { next: "SMALL", conf: 64 },
+    BSBSSS: { next: "SMALL", conf: 64 },
+    BSSBBB: { next: "SMALL", conf: 64 },
+    BSSBBS: { next: "SMALL", conf: 64 },
+    BSSBSB: { next: "SMALL", conf: 64 },
+    BSSBSS: { next: "SMALL", conf: 64 },
+    BSSSBB: { next: "SMALL", conf: 64 },
+    BSSSBS: { next: "SMALL", conf: 64 },
+    BSSSSB: { next: "SMALL", conf: 64 },
+    SBBBBSBB: { next: "BIG", conf: 93 },
+    BSBBBBSB: { next: "BIG", conf: 93 },
+    BBBSBBBB: { next: "BIG", conf: 91 },
+    SBSSSSBS: { next: "SMALL", conf: 93 },
+    BSSSSSBS: { next: "SMALL", conf: 91 },
+    SSSBBBSS: { next: "SMALL", conf: 92 },
+    BSSSSBBB: { next: "BIG", conf: 92 },
+    BBSSSSBB: { next: "BIG", conf: 92 },
+    SBBBSSSS: { next: "SMALL", conf: 92 },
+    SSBBBSSS: { next: "SMALL", conf: 92 },
+    BBBSSSBB: { next: "SMALL", conf: 90 },
+    BSSSSSBB: { next: "SMALL", conf: 90 },
+    BBSSSSBS: { next: "SMALL", conf: 88 },
+    SSSBBBBB: { next: "SMALL", conf: 90 },
+    SBSSSSB: { next: "SMALL", conf: 89 },
+    BSBBBBSBB: { next: "BIG", conf: 91 },
+    BSSSSS: { next: "BIG", conf: 68 },
+    SBBBBB: { next: "SMALL", conf: 68 },
+    SBBBBS: { next: "BIG", conf: 64 },
+    SBBBSB: { next: "BIG", conf: 64 },
+    SBBBSS: { next: "BIG", conf: 64 },
+    SBBSBB: { next: "BIG", conf: 64 },
+    SBBSBS: { next: "BIG", conf: 64 },
+    SBBSSB: { next: "BIG", conf: 64 },
+    SBBSSS: { next: "BIG", conf: 64 },
+    SBSBBB: { next: "BIG", conf: 64 },
+    SBSBBS: { next: "BIG", conf: 64 },
+    SBSBSS: { next: "BIG", conf: 72 },
+    SBSSBB: { next: "BIG", conf: 64 },
+    SBSSBS: { next: "BIG", conf: 64 },
+    SBSSSB: { next: "BIG", conf: 64 },
+    SBSSSS: { next: "BIG", conf: 68 },
+    SSBBBB: { next: "SMALL", conf: 70 },
+    SSBBBS: { next: "SMALL", conf: 70 },
+    SSBBSB: { next: "SMALL", conf: 70 },
+    SSBSSB: { next: "BIG", conf: 68 },
+    SSBSSS: { next: "BIG", conf: 70 },
+    SSSBBS: { next: "BIG", conf: 78 },
+    SSSBSB: { next: "BIG", conf: 78 },
+    SSSBSS: { next: "BIG", conf: 78 },
+    SSSSBS: { next: "BIG", conf: 84 },
+    BBBBBBS: { next: "SMALL", conf: 90 },
+    BBBBBSB: { next: "SMALL", conf: 88 },
+    BBBBBSS: { next: "SMALL", conf: 88 },
+    BBBBSBB: { next: "SMALL", conf: 84 },
+    BBBBSBS: { next: "SMALL", conf: 84 },
+    BBBBSSB: { next: "SMALL", conf: 84 },
+    BBBSBBB: { next: "SMALL", conf: 78 },
+    BBBSBBS: { next: "SMALL", conf: 78 },
+    BBBSBSB: { next: "SMALL", conf: 78 },
+    BBBSBSS: { next: "SMALL", conf: 78 },
+    BBBSSBS: { next: "SMALL", conf: 78 },
+    BBBSSSB: { next: "SMALL", conf: 78 },
+    BBSBBBB: { next: "BIG", conf: 70 },
+    BBSBBBS: { next: "SMALL", conf: 68 },
+    BBSBBSB: { next: "SMALL", conf: 68 },
+    BBSBBSS: { next: "SMALL", conf: 68 },
+    BBSBSBB: { next: "SMALL", conf: 68 },
+    BBSBSBS: { next: "SMALL", conf: 68 },
+    BBSBSSB: { next: "SMALL", conf: 68 },
+    BBSBSSS: { next: "SMALL", conf: 70 },
+    BBSSBBB: { next: "SMALL", conf: 68 },
+    BBSSBBS: { next: "SMALL", conf: 68 },
+    BBSSBSB: { next: "SMALL", conf: 68 },
+    BBSSBSS: { next: "SMALL", conf: 70 },
+    BBSSSBB: { next: "SMALL", conf: 68 },
+    BBSSSBS: { next: "SMALL", conf: 70 },
+    BBSSSSB: { next: "SMALL", conf: 70 },
+    BBSSSSS: { next: "SMALL", conf: 70 },
+    BSBBBBB: { next: "SMALL", conf: 68 },
+    BSBBBBS: { next: "SMALL", conf: 68 },
+    BSBBBSB: { next: "SMALL", conf: 68 },
+    BSBBBSS: { next: "SMALL", conf: 64 },
+    BSBBSBB: { next: "SMALL", conf: 68 },
+    BSBBSBS: { next: "SMALL", conf: 64 },
+    BSBBSSB: { next: "SMALL", conf: 64 },
+    BSBBSSS: { next: "SMALL", conf: 64 },
+    BSBSBBB: { next: "SMALL", conf: 72 },
+    BSBSBBS: { next: "SMALL", conf: 72 },
+    BSBSBSS: { next: "SMALL", conf: 72 },
+    BSBSSBB: { next: "SMALL", conf: 64 },
+    BSBSSBS: { next: "SMALL", conf: 64 },
+    BSBSSSB: { next: "SMALL", conf: 64 },
+    BSBSSSS: { next: "BIG", conf: 68 },
+    BSSBBBB: { next: "SMALL", conf: 68 },
+    BSSBBBS: { next: "SMALL", conf: 64 },
+    BSSBBSB: { next: "SMALL", conf: 64 },
+    BSSBBSS: { next: "SMALL", conf: 64 },
+    BSSBSBB: { next: "SMALL", conf: 64 },
+    BSSBSBS: { next: "SMALL", conf: 64 },
+    BSSBSSB: { next: "SMALL", conf: 64 },
+    BSSBSSS: { next: "BIG", conf: 68 },
+    BSSSBBB: { next: "SMALL", conf: 64 },
+    BSSSBBS: { next: "SMALL", conf: 64 },
+    BSSSBSB: { next: "SMALL", conf: 64 },
+    BSSSBSS: { next: "BIG", conf: 68 },
+    BSSSSBB: { next: "SMALL", conf: 64 },
+    BSSSSBS: { next: "BIG", conf: 68 },
+    BSSSSSB: { next: "BIG", conf: 68 },
+    BSSSSSS: { next: "BIG", conf: 68 },
+    SBBBBBB: { next: "SMALL", conf: 68 },
+    SBBBBBS: { next: "SMALL", conf: 68 },
+    SBBBBSB: { next: "SMALL", conf: 68 },
+    SBBBBSS: { next: "BIG", conf: 64 },
+    SBBBSBB: { next: "SMALL", conf: 68 },
+    SBBBSBS: { next: "BIG", conf: 64 },
+    SBBBSSB: { next: "BIG", conf: 64 },
+    SBBBSSS: { next: "BIG", conf: 64 },
+    SBBSBBB: { next: "SMALL", conf: 68 },
+    SBBSBBS: { next: "BIG", conf: 64 },
+    SBBSBSB: { next: "BIG", conf: 64 },
+    SBBSBSS: { next: "BIG", conf: 64 },
+    SBBSSBB: { next: "BIG", conf: 64 },
+    SBBSSBS: { next: "BIG", conf: 64 },
+    SBBSSSB: { next: "BIG", conf: 64 },
+    SBBSSSS: { next: "BIG", conf: 68 },
+    SBSBBBB: { next: "SMALL", conf: 68 },
+    SBSBBBS: { next: "BIG", conf: 64 },
+    SBSBBSB: { next: "BIG", conf: 64 },
+    SBSBBSS: { next: "BIG", conf: 64 },
+    SBSBSBB: { next: "BIG", conf: 72 },
+    SBSBSSB: { next: "BIG", conf: 72 },
+    SBSBSSS: { next: "BIG", conf: 72 },
+    SBSSBBB: { next: "BIG", conf: 64 },
+    SBSSBBS: { next: "BIG", conf: 64 },
+    SBSSBSB: { next: "BIG", conf: 64 },
+    SBSSBSS: { next: "BIG", conf: 68 },
+    SBSSSBB: { next: "BIG", conf: 64 },
+    SBSSSBS: { next: "BIG", conf: 68 },
+    SBSSSSB: { next: "BIG", conf: 68 },
+    SBSSSSS: { next: "BIG", conf: 68 },
+    SSBBBBB: { next: "SMALL", conf: 70 },
+    SSBBBBS: { next: "SMALL", conf: 70 },
+    SSBBBSB: { next: "SMALL", conf: 70 },
+    SSBBBSS: { next: "BIG", conf: 68 },
+    SSBBSBB: { next: "SMALL", conf: 70 },
+    SSBBSBS: { next: "BIG", conf: 68 },
+    SSBBSSB: { next: "BIG", conf: 68 },
+    SSBBSSS: { next: "BIG", conf: 68 },
+    SSBSBBB: { next: "SMALL", conf: 70 },
+    SSBSBBS: { next: "BIG", conf: 68 },
+    SSBSBSB: { next: "BIG", conf: 68 },
+    SSBSBSS: { next: "BIG", conf: 68 },
+    SSBSSBB: { next: "BIG", conf: 68 },
+    SSBSSBS: { next: "BIG", conf: 68 },
+    SSBSSSB: { next: "BIG", conf: 68 },
+    SSBSSSS: { next: "BIG", conf: 70 },
+    SSSBBBS: { next: "BIG", conf: 78 },
+    SSSBBSB: { next: "BIG", conf: 78 },
+    SSSBSBB: { next: "BIG", conf: 78 },
+    SSSBSBS: { next: "BIG", conf: 78 },
+    SSSBSSB: { next: "BIG", conf: 78 },
+    SSSBSSS: { next: "BIG", conf: 78 },
+    SSSSBBS: { next: "BIG", conf: 84 },
+    SSSSBSB: { next: "BIG", conf: 84 },
+    SSSSBSS: { next: "BIG", conf: 84 },
+    SSSSSBB: { next: "BIG", conf: 88 },
+    SSSSSBS: { next: "BIG", conf: 88 },
+    SSSSSSB: { next: "BIG", conf: 90 },
+    BBBBBBBS: { next: "SMALL", conf: 92 },
+    BBBBBBSB: { next: "SMALL", conf: 90 },
+    BBBBBSBB: { next: "SMALL", conf: 88 },
+    BBBBBSBS: { next: "SMALL", conf: 88 },
+    BBBBBSSB: { next: "SMALL", conf: 88 },
+    BBBBSBBB: { next: "SMALL", conf: 84 },
+    BBBBSBBS: { next: "SMALL", conf: 84 },
+    BBBBSBSB: { next: "SMALL", conf: 84 },
+    BBBBSBSS: { next: "SMALL", conf: 84 },
+    BBBBSSBB: { next: "SMALL", conf: 84 },
+    BBBBSSBS: { next: "SMALL", conf: 84 },
+    BBBBSSSB: { next: "SMALL", conf: 84 },
+    BBBSBBBB: { next: "SMALL", conf: 78 },
+    BBBSBBBS: { next: "SMALL", conf: 78 },
+    BBBSBBSB: { next: "SMALL", conf: 78 },
+    BBBSBBSS: { next: "SMALL", conf: 78 },
+    BBBSBSBB: { next: "SMALL", conf: 78 },
+    BBBSBSBS: { next: "SMALL", conf: 78 },
+    BBBSBSSB: { next: "SMALL", conf: 78 },
+    BBBSBSSS: { next: "SMALL", conf: 78 },
+    BBBSSBBS: { next: "SMALL", conf: 78 },
+    BBBSSBSB: { next: "SMALL", conf: 78 },
+    BBBSSBSS: { next: "SMALL", conf: 78 },
+    BBBSSSBS: { next: "SMALL", conf: 78 },
+    BBBSSSSB: { next: "SMALL", conf: 78 },
+    BBBSSSSS: { next: "SMALL", conf: 78 },
+    BBSBBBBB: { next: "BIG", conf: 70 },
+    BBSBBBBS: { next: "BIG", conf: 70 },
+    BBSBBBSB: { next: "BIG", conf: 70 },
+    BBSBBBSS: { next: "SMALL", conf: 68 },
+    BBSBBSBB: { next: "BIG", conf: 70 },
+    BBSBBSBS: { next: "SMALL", conf: 68 },
+    BBSBBSSB: { next: "SMALL", conf: 68 },
+    BBSBBSSS: { next: "SMALL", conf: 70 },
+    BBSBSBBB: { next: "BIG", conf: 70 },
+    BBSBSBBS: { next: "SMALL", conf: 68 },
+    BBSBSBSB: { next: "SMALL", conf: 68 },
+    BBSBSBSS: { next: "SMALL", conf: 70 },
+    BBSBSSBB: { next: "SMALL", conf: 68 },
+    BBSBSSBS: { next: "SMALL", conf: 70 },
+    BBSBSSSB: { next: "SMALL", conf: 70 },
+    BBSBSSSS: { next: "SMALL", conf: 70 },
+    BBSSBBBB: { next: "BIG", conf: 70 },
+    BBSSBBBS: { next: "SMALL", conf: 68 },
+    BBSSBBSB: { next: "SMALL", conf: 68 },
+    BBSSBSBB: { next: "SMALL", conf: 68 },
+    BBSSBSBS: { next: "SMALL", conf: 70 },
+    BBSSBSSB: { next: "SMALL", conf: 70 },
+    BBSSBSSS: { next: "SMALL", conf: 70 },
+    BBSSSBBB: { next: "SMALL", conf: 68 },
+    BBSSSBBS: { next: "SMALL", conf: 70 },
+    BBSSSBSB: { next: "SMALL", conf: 70 },
+    BBSSSBSS: { next: "SMALL", conf: 70 },
+    BBSSSSBB: { next: "SMALL", conf: 70 },
+    BBSSSSBS: { next: "SMALL", conf: 70 },
+    BBSSSSSB: { next: "SMALL", conf: 70 },
+    BBSSSSSS: { next: "SMALL", conf: 70 },
+    BSBBBBBB: { next: "SMALL", conf: 68 },
+    BSBBBBBS: { next: "SMALL", conf: 68 },
+    BSBBBBSB: { next: "SMALL", conf: 68 },
+    BSBBBBSS: { next: "SMALL", conf: 64 },
+    BSBBBSBB: { next: "SMALL", conf: 68 },
+    BSBBBSBS: { next: "SMALL", conf: 64 },
+    BSBBBSSB: { next: "SMALL", conf: 64 },
+    BSBBBSSS: { next: "SMALL", conf: 64 },
+    BSBBSBBB: { next: "SMALL", conf: 68 },
+    BSBBSBBS: { next: "SMALL", conf: 64 },
+    BSBBSBSB: { next: "SMALL", conf: 64 },
+    BSBBSBSS: { next: "SMALL", conf: 64 },
+    BSBBSSBB: { next: "SMALL", conf: 64 },
+    BSBBSSBS: { next: "SMALL", conf: 64 },
+    BSBBSSSB: { next: "SMALL", conf: 64 },
+    BSBBSSSS: { next: "SMALL", conf: 64 },
+    BSBSBBBB: { next: "SMALL", conf: 72 },
+    BSBSBBBS: { next: "SMALL", conf: 72 },
+    BSBSBBSB: { next: "SMALL", conf: 72 },
+    BSBSBBSS: { next: "SMALL", conf: 72 },
+    BSBSBSBB: { next: "SMALL", conf: 72 },
+    BSBSBSSB: { next: "SMALL", conf: 72 },
+    BSBSBSSS: { next: "SMALL", conf: 72 },
+    BSBSSBBB: { next: "SMALL", conf: 64 },
+    BSBSSBBS: { next: "SMALL", conf: 64 },
+    BSBSSBSB: { next: "SMALL", conf: 64 },
+    BSBSSBSS: { next: "SMALL", conf: 64 },
+    BSBSSSBB: { next: "SMALL", conf: 64 },
+    BSBSSSBS: { next: "SMALL", conf: 64 },
+    BSBSSSSB: { next: "SMALL", conf: 64 },
+    BSBSSSSS: { next: "BIG", conf: 68 },
+    BSSBBBBB: { next: "SMALL", conf: 68 },
+    BSSBBBBS: { next: "SMALL", conf: 64 },
+    BSSBBBSB: { next: "SMALL", conf: 64 },
+    BSSBBBSS: { next: "SMALL", conf: 64 },
+    BSSBBSBB: { next: "SMALL", conf: 64 },
+    BSSBBSBS: { next: "SMALL", conf: 64 },
+    BSSBBSSB: { next: "SMALL", conf: 64 },
+    BSSBBSSS: { next: "SMALL", conf: 64 },
+    BSSBSBBB: { next: "SMALL", conf: 64 },
+    BSSBSBBS: { next: "SMALL", conf: 64 },
+    BSSBSBSB: { next: "SMALL", conf: 64 },
+    BSSBSBSS: { next: "SMALL", conf: 64 },
+    BSSBSSBB: { next: "SMALL", conf: 64 },
+    BSSBSSBS: { next: "SMALL", conf: 64 },
+    BSSBSSSB: { next: "SMALL", conf: 64 },
+    BSSBSSSS: { next: "BIG", conf: 68 },
+    BSSSBBBB: { next: "SMALL", conf: 64 },
+    BSSSBBBS: { next: "SMALL", conf: 64 },
+    BSSSBBSB: { next: "SMALL", conf: 64 },
+    BSSSBBSS: { next: "SMALL", conf: 64 },
+    BSSSBSBB: { next: "SMALL", conf: 64 },
+    BSSSBSBS: { next: "SMALL", conf: 64 },
+    BSSSBSSB: { next: "SMALL", conf: 64 },
+    BSSSBSSS: { next: "BIG", conf: 68 },
+    BSSSSBBB: { next: "SMALL", conf: 64 },
+    BSSSSBBS: { next: "SMALL", conf: 64 },
+    BSSSSBSB: { next: "SMALL", conf: 64 },
+    BSSSSBSS: { next: "BIG", conf: 68 },
+    BSSSSSBB: { next: "SMALL", conf: 64 },
+    BSSSSSBS: { next: "BIG", conf: 68 },
+    BSSSSSSB: { next: "BIG", conf: 68 },
+    BSSSSSSS: { next: "BIG", conf: 68 },
+    SBBBBBBB: { next: "SMALL", conf: 68 },
+    SBBBBBBS: { next: "SMALL", conf: 68 },
+    SBBBBBSB: { next: "SMALL", conf: 68 },
+    SBBBBBSS: { next: "BIG", conf: 68 },
+    SBBBBSSB: { next: "BIG", conf: 68 },
+    SBBBBSSS: { next: "BIG", conf: 68 },
+    SBBBBSBB: { next: "SMALL", conf: 68 },
+    SBBBBSBS: { next: "BIG", conf: 68 },
+    SBBBBSSS: { next: "BIG", conf: 68 }
+};
+
+// ============================================================
+// BUNNY AI — Pattern Names & Descriptions
+// ============================================================
+const BUNNY_PATTERN_NAMES = {
+    '4x_STREAK_B': ['4× BIG Streak 🔥', '⚡ 99% chance of SMALL!'],
+    '4x_STREAK_S': ['4× SMALL Streak 🔥', '⚡ 99% chance of BIG!'],
+    '3x_STREAK_B': ['3× BIG Streak 📈', '📈 67% SMALL coming.'],
+    '3x_STREAK_S': ['3× SMALL Streak 📈', '📈 67% BIG coming.'],
+    '2x_STREAK_B': ['2× BIG Streak →', '→ 57% SMALL edge.'],
+    '2x_STREAK_S': ['2× SMALL Streak →', '→ 57% BIG edge.'],
+    'CYCLE_2': ['2-Beat Cycle 🔄', '🔄 BSBS locked!'],
+    'CYCLE_3': ['3-Beat Cycle 🔄', '🔄 3-beat pattern repeating!'],
+    'CYCLE_4': ['4-Beat Cycle 🔄', '🔄 4-beat cycle confirmed!'],
+    'CYCLE_5': ['5-Beat Cycle 🔄', '🔄 5-beat lock!'],
+    'ZIGZAG': ['Zigzag Pattern ↔', '↔ Pure alternating BSBS.'],
+    'HEAVY_BIG': ['Heavy BIG Bias ⚖️', '⚖️ 7+ BIGs — SMALL reversal pressure!'],
+    'HEAVY_SMALL': ['Heavy SMALL Bias ⚖️', '⚖️ 7+ SMALLs — BIG reversal overdue!'],
+    'DOUBLE_DOUBLE': ['Double-Double Flip 🎯', '🎯 BB then SS — flip incoming!'],
+    'SINGLE_BREAK_B': ['Single Break (B) 💥', '💥 BIG streak with 1 SMALL hiccup.'],
+    'SINGLE_BREAK_S': ['Single Break (S) 💥', '💥 SMALL streak with 1 BIG hiccup.'],
+    'STUTTER_B': ['BIG Stutter 🔀', '🔀 Long BIG run, one pause.'],
+    'STUTTER_S': ['SMALL Stutter 🔀', '🔀 Long SMALL run, one pause.'],
+    'DRAGON_B': ['Dragon Streak (BIG) 🐉', '🐉 6+ BIGs — SMALL reversal IMMINENT!'],
+    'DRAGON_S': ['Dragon Streak (SMALL) 🐉', '🐉 6+ SMALLs — BIG coming hard!'],
+    'PULSE_B': ['BIG Pulse 💓', '💓 One lone SMALL then BIG.'],
+    'PULSE_S': ['SMALL Pulse 💓', '💓 One lone BIG then SMALL.'],
+    'TRAP_B': ['BIG Trap ⚠️', '⚠️ Two BIGs, one SMALL, two BIGs — TRAP!'],
+    'TRAP_S': ['SMALL Trap ⚠️', '⚠️ Two SMALLs, one BIG, two SMALLs — TRAP!'],
+    'PENDULUM': ['Pendulum Swing 🎭', '🎭 Equal blocks swinging.'],
+    'TWIN_PULSE': ['Twin Pulse 💫', '💫 Two single interruptions (BBSBS).'],
+    'SANDWICH_B': ['BIG Sandwich 🥪', '🥪 BIG surrounded by SMALLs.'],
+    'SANDWICH_S': ['SMALL Sandwich 🥪', '🥪 SMALL surrounded by BIGs.'],
+    'WAVE_UP': ['Wave Rising 🌊', '🌊 SMALL→BIG transition!'],
+    'WAVE_DOWN': ['Wave Falling 🌊', '🌊 BIG→SMALL transition!'],
+    'MIRROR': ['Mirror Pattern 🪞', '🪞 First half mirrors second half.'],
+    'FADE_B': ['BIG Fade 📉', '📉 BIG streaks getting shorter.'],
+    'FADE_S': ['SMALL Fade 📉', '📉 SMALL streaks getting shorter.'],
+    'CLUSTER_JUMP': ['Cluster Jump ⚡', '⚡ Sudden switch to new cluster!'],
+    'ECHO': ['Echo Pattern 📡', '📡 Pattern repeating with delay.'],
+    'CHAOS': ['Chaos Zone 🌀', '🌀 No clear pattern — random!'],
+    'MULTI': ['Multi-Engine Vote 🧠', '🧠 Consensus signal active.'],
+    '5x_STREAK_B': ['5× BIG Dragon Zone 🐉🔥', '🐉🔥 5 consecutive BIGs — DRAGON ZONE!'],
+    '5x_STREAK_S': ['5× SMALL Dragon Zone 🐉🔥', '🐉🔥 5 consecutive SMALLs — DRAGON ZONE!'],
+    'BBBSBS_B': ['BBBSBS Trend Injection 🎯', '🎯 BIG×3 then SBS — SMALL next!'],
+    'BBBSBS_S': ['SSSBSB Trend Injection 🎯', '🎯 SMALL×3 then BSB — BIG next!'],
+    'LIVE_LEARN': ['⚡ AI Live Pattern', '⚡ AI detected this sequence before!'],
+    'ADAPTIVE': ['🧮 Adaptive Math', '🧮 Pure math prediction!'],
+    'ACCELERATION_B': ['BIG Acceleration 📈', '📈 BIG streaks getting longer!'],
+    'ACCELERATION_S': ['SMALL Acceleration 📉', '📉 SMALL streaks getting longer!'],
+    'MOMENTUM_B': ['BIG Momentum 🚀', '🚀 3+ BIGs — BIG momentum!'],
+    'MOMENTUM_S': ['SMALL Momentum 🚀', '🚀 3+ SMALLs — SMALL momentum!'],
+    'NOVA_B': ['BIG Nova 💥', '💥 Sudden BIG explosion!'],
+    'NOVA_S': ['SMALL Nova 💥', '💥 Sudden SMALL explosion!'],
+    'TRIPLE_BREAK_B': ['Triple Break (BIG) 🔱', '🔱 BSBSB — fully alternating.'],
+    'TRIPLE_BREAK_S': ['Triple Break (SMALL) 🔱', '🔱 SBSBS — fully alternating.'],
+    'ZIGZAG_BLOCK_B': ['Zigzag→BIG Block 🌀', '🌀 Zigzag merged into BIG block!'],
+    'ZIGZAG_BLOCK_S': ['Zigzag→SMALL Block 🌀', '🌀 Zigzag merged into SMALL block!'],
+    'PRESSURE_B': ['BIG Pressure ⬆️', '⬆️ BIG will force through!'],
+    'PRESSURE_S': ['SMALL Pressure ⬇️', '⬇️ SMALL will break through!'],
+    'REBOUND_B': ['BIG Rebound ↩️', '↩️ BIG rebounded — will hold!'],
+    'REBOUND_S': ['SMALL Rebound ↩️', '↩️ SMALL rebounded — continues!'],
+};
+
+// ── Current prediction state ──
+let currentPrediction = null;
+let bunnyUpdateCount = 0;
+
+// ── Helper: Convert number to B/S ──
+function numToType(n) {
+    return n >= 5 ? 'B' : 'S';
+}
+
+// ── Helper: Look up pattern in DB ──
+function lookupPattern(pattern) {
+    return CPU_PATTERN_DB[pattern] || null;
+}
+
+// ── Helper: Live adaptive detection (fallback) ──
+function liveAdaptiveDetect(types) {
+    if (types.length < 4) return null;
+    const len = Math.min(types.length, 10);
+    const slice = types.slice(0, len);
+    const seq = slice.join('');
+
+    // Try to find longest matching pattern in DB
+    for (let l = Math.min(seq.length, 9); l >= 3; l--) {
+        const sub = seq.substring(0, l);
+        const hit = lookupPattern(sub);
+        if (hit) {
+            return {
+                method: 'AI_LIVE',
+                size: hit.next,
+                conf: hit.conf
+            };
+        }
+    }
+
+    // Fallback: statistical
+    const bCount = slice.filter(t => t === 'B').length;
+    const total = slice.length;
+    const bRatio = bCount / total;
+    if (bRatio >= 0.7) {
+        return { method: 'MATH', size: 'SMALL', conf: 65 + Math.floor(bRatio * 20) };
+    } else if (bRatio <= 0.3) {
+        return { method: 'MATH', size: 'BIG', conf: 65 + Math.floor((1 - bRatio) * 20) };
+    }
+    return null;
+}
+
+// ── Main Bunny AI Engine ──
+function runBunnyAI(historyNumbers) {
+    if (!historyNumbers || historyNumbers.length < 3) return;
+    bunnyUpdateCount++;
+
+    const hist10 = historyNumbers.slice(0, 10);
+    const deepHist = historyNumbers.slice(0, 500);
+    const types = deepHist.map(n => numToType(n));
+
+    // ── Update dots (safe DOM) ──
+    const dotsEl = document.getElementById('bunnyDots');
+    if (dotsEl) {
+        dotsEl.innerHTML = hist10.map((n, i) => {
+            const isBig = n >= 5;
+            const col = isBig ? '#ef4444' : '#00d4ff';
+            const bg = isBig ? 'rgba(239,68,68,0.15)' : 'rgba(0,212,255,0.15)';
+            const label = isBig ? 'B' : 'S';
+            const opacity = 1 - (i * 0.07);
+            return `<div style="width:20px;height:20px;border-radius:50%;background:${bg};border:1.5px solid ${col};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;color:${col};opacity:${opacity};flex-shrink:0;">${label}</div>`;
+        }).join('');
+    }
+
+    // ── Detect pattern ──
+    let patKey = 'MULTI';
+    let pred = currentPrediction ? currentPrediction.size : '--';
+    let conf = currentPrediction ? currentPrediction.confidence : 70;
+
+    // ── Streak detection ──
+    let sk = 1;
+    for (let i = 0; i < types.length - 1 && types[i] === types[i + 1]; i++) sk++;
+    const cur = types[0];
+    const opp = cur === 'B' ? 'S' : 'B';
+
+    // ── Cycle detection ──
+    let cycleFound = false;
+    for (let cl = 2; cl <= 8; cl++) {
+        if (types.length < cl * 2) continue;
+        let ok = true;
+        for (let j = 0; j < cl; j++) {
+            if (types[j] !== types[j + cl]) { ok = false; break; }
+        }
+        if (ok) {
+            patKey = 'CYCLE_' + cl;
+            cycleFound = true;
+            conf = cl >= 5 ? 96 : cl >= 3 ? 91 : 82;
+            break;
+        }
+    }
+
+    if (!cycleFound) {
+        const b10 = types.slice(0, 10).filter(t => t === 'B').length;
+
+        if (sk >= 6) {
+            patKey = cur === 'B' ? 'DRAGON_B' : 'DRAGON_S';
+            conf = Math.min(95, conf + 3);
+            pred = cur === 'B' ? 'SMALL' : 'BIG';
+        } else if (sk === 5) {
+            patKey = cur === 'B' ? '5x_STREAK_B' : '5x_STREAK_S';
+            conf = Math.min(93, conf + 2);
+            pred = cur === 'B' ? 'SMALL' : 'BIG';
+        } else if (sk >= 4) {
+            patKey = '4x_STREAK_' + cur;
+            conf = Math.min(92, conf + 1);
+            pred = cur === 'B' ? 'SMALL' : 'BIG';
+        } else if (sk === 3) {
+            const p6 = types.length >= 6 ? types.slice(0, 6).join('') : '';
+            const p7 = types.length >= 7 ? types.slice(0, 7).join('') : '';
+            const p8 = types.length >= 8 ? types.slice(0, 8).join('') : '';
+
+            if (p8 === 'BBBSBSBS' || p7 === 'BBBSBSB' || p6 === 'BBBSBS') {
+                patKey = 'BBBSBS_B';
+                conf = 80;
+                pred = 'SMALL';
+            } else if (p8 === 'SSSBSBSB' || p7 === 'SSSBSBS' || p6 === 'SSSBSB') {
+                patKey = 'BBBSBS_S';
+                conf = 80;
+                pred = 'BIG';
+            } else {
+                patKey = '3x_STREAK_' + cur;
+                conf = 78;
+                pred = cur === 'B' ? 'SMALL' : 'BIG';
+            }
+        } else if (sk === 2) {
+            patKey = '2x_STREAK_' + cur;
+            conf = 65;
+            pred = cur === 'B' ? 'SMALL' : 'BIG';
+        } else {
+            // ── Advanced pattern detection ──
+            const seq6 = types.length >= 6 ? types.slice(0, 6).join('') : '';
+            const seq7 = types.length >= 7 ? types.slice(0, 7).join('') : '';
+            const seq8 = types.length >= 8 ? types.slice(0, 8).join('') : '';
+            const seq9 = types.length >= 9 ? types.slice(0, 9).join('') : '';
+            const seq10 = types.length >= 10 ? types.slice(0, 10).join('') : '';
+
+            let found = false;
+
+            // ── STUTTER / SINGLE BREAK ──
+            if (seq8 === 'BBBBBBBS' || seq7 === 'BBBBBBS' || seq6 === 'BBBBBS') {
+                patKey = 'STUTTER_B';
+                conf = 86;
+                pred = 'SMALL';
+                found = true;
+            } else if (seq8 === 'SSSSSSSB' || seq7 === 'SSSSSSB' || seq6 === 'SSSSSB') {
+                patKey = 'STUTTER_S';
+                conf = 86;
+                pred = 'BIG';
+                found = true;
+            } else if (seq6 === 'BBBBSB' || seq5 === 'BBBSB') {
+                patKey = 'SINGLE_BREAK_B';
+                conf = 79;
+                pred = 'SMALL';
+                found = true;
+            } else if (seq6 === 'SSSSBS' || seq5 === 'SSSBS') {
+                patKey = 'SINGLE_BREAK_S';
+                conf = 79;
+                pred = 'BIG';
+                found = true;
+            }
+
+            // ── TRAP ──
+            if (!found && (seq6 === 'BBSSBB' || seq7 === 'BBSSBB' || seq8 === 'BBSSBB')) {
+                patKey = 'TRAP_B';
+                conf = 83;
+                pred = 'SMALL';
+                found = true;
+            } else if (!found && (seq6 === 'SSBBSS' || seq7 === 'SSBBSS' || seq8 === 'SSBBSS')) {
+                patKey = 'TRAP_S';
+                conf = 83;
+                pred = 'BIG';
+                found = true;
+            }
+
+            // ── SANDWICH ──
+            if (!found && seq5 === 'BBSBB') {
+                patKey = 'SANDWICH_B';
+                conf = 71;
+                pred = 'SMALL';
+                found = true;
+            } else if (!found && seq5 === 'SSBSS') {
+                patKey = 'SANDWICH_S';
+                conf = 71;
+                pred = 'BIG';
+                found = true;
+            }
+
+            // ── PENDULUM ──
+            if (!found && (seq7 === 'BBSSSBB' || seq8 === 'BBSSSBB')) {
+                patKey = 'PENDULUM';
+                conf = 78;
+                pred = 'SMALL';
+                found = true;
+            } else if (!found && (seq7 === 'SSBBBSS' || seq8 === 'SSBBBSS')) {
+                patKey = 'PENDULUM';
+                conf = 78;
+                pred = 'BIG';
+                found = true;
+            }
+
+            // ── TWIN PULSE ──
+            if (!found && (seq6 === 'BSBBSB' || seq5 === 'BSBBS')) {
+                patKey = 'TWIN_PULSE';
+                conf = 68;
+                pred = 'SMALL';
+                found = true;
+            } else if (!found && (seq6 === 'SBSSBS' || seq5 === 'SBSSB')) {
+                patKey = 'TWIN_PULSE';
+                conf = 68;
+                pred = 'BIG';
+                found = true;
+            }
+
+            // ── WAVE ──
+            if (!found && (seq6 === 'SBBBSS' || seq7 === 'SBBBSS')) {
+                patKey = 'WAVE_UP';
+                conf = 69;
+                pred = 'BIG';
+                found = true;
+            } else if (!found && (seq6 === 'BSSBB' || seq7 === 'BSSBB')) {
+                patKey = 'WAVE_DOWN';
+                conf = 69;
+                pred = 'SMALL';
+                found = true;
+            }
+
+            // ── MIRROR ──
+            if (!found && seq6 === 'BBSSBB') {
+                patKey = 'MIRROR';
+                conf = 83;
+                pred = 'SMALL';
+                found = true;
+            } else if (!found && seq6 === 'SSBBSS') {
+                patKey = 'MIRROR';
+                conf = 83;
+                pred = 'BIG';
+                found = true;
+            }
+
+            // ── FADE ──
+            if (!found && (seq6 === 'SBBBSS' || seq7 === 'SBBBSS')) {
+                patKey = 'FADE_B';
+                conf = 69;
+                pred = 'BIG';
+                found = true;
+            } else if (!found && (seq6 === 'BSSBB' || seq7 === 'BSSBB')) {
+                patKey = 'FADE_S';
+                conf = 69;
+                pred = 'SMALL';
+                found = true;
+            }
+
+            // ── CLUSTER JUMP ──
+            if (!found && (seq7 === 'BBBBSSS' || seq8 === 'BBBBSSS')) {
+                patKey = 'CLUSTER_JUMP';
+                conf = 88;
+                pred = 'SMALL';
+                found = true;
+            } else if (!found && (seq7 === 'SSSSBBB' || seq8 === 'SSSSBBB')) {
+                patKey = 'CLUSTER_JUMP';
+                conf = 88;
+                pred = 'BIG';
+                found = true;
+            }
+
+            // ── ECHO ──
+            if (!found && (seq6 === 'BSBSB' || seq7 === 'BSBSB')) {
+                patKey = 'ECHO';
+                conf = 65;
+                pred = 'SMALL';
+                found = true;
+            } else if (!found && (seq6 === 'SBSBS' || seq7 === 'SBSBS')) {
+                patKey = 'ECHO';
+                conf = 65;
+                pred = 'BIG';
+                found = true;
+            }
+
+            // ── ACCELERATION ──
+            if (!found && (seq7 === 'BBBBBBB' || seq8 === 'BBBBBBB')) {
+                patKey = 'ACCELERATION_B';
+                conf = 92;
+                pred = 'SMALL';
+                found = true;
+            } else if (!found && (seq7 === 'SSSSSSS' || seq8 === 'SSSSSSS')) {
+                patKey = 'ACCELERATION_S';
+                conf = 92;
+                pred = 'BIG';
+                found = true;
+            }
+
+            // ── MOMENTUM ──
+            if (!found && (seq6 === 'BBBBBB' || seq5 === 'BBBBB')) {
+                patKey = 'MOMENTUM_B';
+                conf = 90;
+                pred = 'SMALL';
+                found = true;
+            } else if (!found && (seq6 === 'SSSSSS' || seq5 === 'SSSSS')) {
+                patKey = 'MOMENTUM_S';
+                conf = 90;
+                pred = 'BIG';
+                found = true;
+            }
+
+            // ── NOVA ──
+            if (!found && (seq6 === 'SBBBBB' || seq5 === 'SBBBB')) {
+                patKey = 'NOVA_B';
+                conf = 73;
+                pred = 'SMALL';
+                found = true;
+            } else if (!found && (seq6 === 'BSSSSS' || seq5 === 'BSSSS')) {
+                patKey = 'NOVA_S';
+                conf = 73;
+                pred = 'BIG';
+                found = true;
+            }
+
+            // ── REBOUND ──
+            if (!found && (seq6 === 'SBBBBB' || seq5 === 'SBBBB')) {
+                patKey = 'REBOUND_B';
+                conf = 73;
+                pred = 'SMALL';
+                found = true;
+            } else if (!found && (seq6 === 'BSSSSS' || seq5 === 'BSSSS')) {
+                patKey = 'REBOUND_S';
+                conf = 73;
+                pred = 'BIG';
+                found = true;
+            }
+
+            // ── PRESSURE ──
+            if (!found && (seq8 === 'BBBBBBBB' || seq7 === 'BBBBBBB')) {
+                patKey = 'PRESSURE_B';
+                conf = 94;
+                pred = 'SMALL';
+                found = true;
+            } else if (!found && (seq8 === 'SSSSSSSS' || seq7 === 'SSSSSSS')) {
+                patKey = 'PRESSURE_S';
+                conf = 94;
+                pred = 'BIG';
+                found = true;
+            }
+
+            // ── TRIPLE BREAK ──
+            if (!found && (seq6 === 'BSBSBS' || seq5 === 'BSBSB')) {
+                patKey = 'TRIPLE_BREAK_B';
+                conf = 74;
+                pred = 'BIG';
+                found = true;
+            } else if (!found && (seq6 === 'SBSBSB' || seq5 === 'SBSBS')) {
+                patKey = 'TRIPLE_BREAK_S';
+                conf = 74;
+                pred = 'SMALL';
+                found = true;
+            }
+
+            // ── ZIGZAG BLOCK ──
+            if (!found && (seq8 === 'BBBSBSBS' || seq7 === 'BBBSBSB')) {
+                patKey = 'ZIGZAG_BLOCK_B';
+                conf = 81;
+                pred = 'SMALL';
+                found = true;
+            } else if (!found && (seq8 === 'SSSBSBSB' || seq7 === 'SSSBSBS')) {
+                patKey = 'ZIGZAG_BLOCK_S';
+                conf = 81;
+                pred = 'BIG';
+                found = true;
+            }
+
+            // ── HEAVY BIAS ──
+            if (!found && b10 >= 7) {
+                patKey = 'HEAVY_BIG';
+                conf = 82;
+                pred = 'SMALL';
+                found = true;
+            } else if (!found && b10 <= 3) {
+                patKey = 'HEAVY_SMALL';
+                conf = 82;
+                pred = 'BIG';
+                found = true;
+            }
+
+            // ── ZIGZAG ──
+            if (!found && (seq6 === 'BSBSBS' || seq5 === 'BSBSB' || seq4 === 'BSBS')) {
+                patKey = 'ZIGZAG';
+                conf = 74;
+                pred = 'BIG';
+                found = true;
+            } else if (!found && (seq6 === 'SBSBSB' || seq5 === 'SBSBS' || seq4 === 'SBSB')) {
+                patKey = 'ZIGZAG';
+                conf = 74;
+                pred = 'SMALL';
+                found = true;
+            }
+
+            // ── DOUBLE DOUBLE ──
+            if (!found && (seq6 === 'BBSSBB' || seq5 === 'BBSSB')) {
+                patKey = 'DOUBLE_DOUBLE';
+                conf = 83;
+                pred = 'SMALL';
+                found = true;
+            } else if (!found && (seq6 === 'SSBBSS' || seq5 === 'SSBBS')) {
+                patKey = 'DOUBLE_DOUBLE';
+                conf = 83;
+                pred = 'BIG';
+                found = true;
+            }
+
+            // ── Fallback: adaptive ──
+            if (!found) {
+                const adapt = liveAdaptiveDetect(types);
+                if (adapt) {
+                    patKey = adapt.method === 'AI_LIVE' ? 'LIVE_LEARN' : 'ADAPTIVE';
+                    conf = adapt.conf;
+                    pred = adapt.size;
+                    found = true;
+                }
+            }
+
+            // ── Ultimate fallback ──
+            if (!found) {
+                patKey = 'CHAOS';
+                conf = 55;
+                pred = Math.random() < 0.5 ? 'BIG' : 'SMALL';
+            }
+        }
+    }
+
+    // ── Look up pattern name ──
+    const info = BUNNY_PATTERN_NAMES[patKey] || ['Unknown', '🔍 Analyzing...'];
+    const patName = info[0];
+    let msg = info[1];
+
+    const callCol = pred === 'BIG' ? '#ef4444' : pred === 'SMALL' ? '#00d4ff' : '#a855f7';
+    const confCol = conf >= 85 ? '#22c55e' : conf >= 70 ? '#facc15' : '#f97316';
+
+    // ── Update DOM ──
+    const msgEl = document.getElementById('bunnyMsg');
+    if (msgEl) msgEl.innerHTML = msg;
+
+    const patEl = document.getElementById('bunnyPatName');
+    if (patEl) { patEl.innerText = patName; }
+
+    const confEl = document.getElementById('bunnyConf');
+    if (confEl) { confEl.innerText = conf + '%';
+        confEl.style.color = confCol; }
+
+    const callEl = document.getElementById('bunnyCall');
+    if (callEl) { callEl.innerText = pred;
+        callEl.style.color = callCol; }
+
+    // ── Store for external use ──
+    currentPrediction = { size: pred, confidence: conf, pattern: patKey };
+
+    // ── Return result ──
+    return {
+        pattern: patKey,
+        patternName: patName,
+        prediction: pred,
+        confidence: conf,
+        message: msg
+    };
+}
+
+// ── Export for Node.js / module usage ──
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        CPU_PATTERN_DB,
+        BUNNY_PATTERN_NAMES,
+        runBunnyAI,
+        numToType,
+        lookupPattern,
+        liveAdaptiveDetect
+    };
+}
+
+// ── Also attach to window for browser usage ──
+if (typeof window !== 'undefined') {
+    window.runBunnyAI = runBunnyAI;
+    window.CPU_PATTERN_DB = CPU_PATTERN_DB;
+    window.BUNNY_PATTERN_NAMES = BUNNY_PATTERN_NAMES;
+    window.currentPrediction = currentPrediction;
+}
+
+console.log('🐇 Bunny AI Pattern Engine loaded!');
+console.log('📊 ' + Object.keys(CPU_PATTERN_DB).length + ' patterns loaded.');]
+​Your Tasks for Server 3:
+​Analyze & Integrate: Understand the CPU_PATTERN_DB and runBunnyAI pattern matching system. Wrap this safely inside a Server 3 controller/module structure so it can be called instantly via an API endpoint or WebSocket.
+​Build Custom Number Prediction Logic: My current code only predicts the size (BIG/SMALL). I need you to invent a new, highly accurate mathematical function called predictExactNumber(predictedSize, historyArray) that runs immediately after the size prediction.
+​Rules for Number Logic:
+​If runBunnyAI predicts BIG: The target number must be randomly or logically chosen from [5, 6, 7, 8, 9].
+​If runBunnyAI predicts SMALL: The target number must be from [0, 1, 2, 3, 4].
+​The Algorithm: Do not just guess randomly. Write logic that analyzes the last 500 numbers in the history array to find the "hot" (most frequent) and "cold" (longest overdue) numbers within the chosen set. Weight the final prediction based on a smart algorithm.

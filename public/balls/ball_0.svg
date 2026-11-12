@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110" width="110" height="110">
+  <defs>
+    <!-- Outer clipping circle -->
+    <clipPath id="ballClip">
+      <circle cx="55" cy="55" r="53" />
+    </clipPath>
+
+    <!-- Inner circle clipping -->
+    <clipPath id="innerClip">
+      <circle cx="55" cy="55" r="37.5" />
+    </clipPath>
+
+    <!-- Left half clip (Red) along diagonal through (55,55) -->
+    <clipPath id="leftHalfClip">
+      <polygon points="-10,-10 75,-10 35,120 -10,120" />
+    </clipPath>
+
+    <!-- Right half clip (Violet) along diagonal through (55,55) -->
+    <clipPath id="rightHalfClip">
+      <polygon points="75,-10 120,-10 120,120 35,120" />
+    </clipPath>
+
+    <!-- Top-left 3D specular highlight -->
+    <radialGradient id="outerSpecular" cx="35%" cy="28%" r="45%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.7" />
+      <stop offset="45%" stop-color="#ffffff" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Bottom-right 3D sphere shadow -->
+    <radialGradient id="sphereShadow" cx="42%" cy="40%" r="58%">
+      <stop offset="60%" stop-color="#000000" stop-opacity="0" />
+      <stop offset="85%" stop-color="#000000" stop-opacity="0.22" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.48" />
+    </radialGradient>
+
+    <!-- Inner disc gradient -->
+    <radialGradient id="innerDisc" cx="42%" cy="36%" r="55%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="70%" stop-color="#f8fafc" />
+      <stop offset="100%" stop-color="#e2e8f0" />
+    </radialGradient>
+
+    <!-- Inner top gloss -->
+    <radialGradient id="innerGloss" cx="50%" cy="25%" r="35%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <g clip-path="url(#ballClip)">
+    <!-- Base Red fill -->
+    <rect x="0" y="0" width="110" height="110" fill="#ef4444" />
+
+    <!-- Violet diagonal section -->
+    <polygon points="75,0 110,0 110,110 35,110" fill="#a855f7" />
+
+    <!-- Lottery ball perimeter dots -->
+    <g fill="#ffffff" fill-opacity="0.45">
+      <circle cx="55" cy="4" r="11" />
+      <circle cx="106" cy="55" r="11" />
+      <circle cx="55" cy="106" r="11" />
+      <circle cx="4" cy="55" r="11" />
+      <circle cx="18" cy="18" r="9" />
+      <circle cx="92" cy="18" r="9" />
+      <circle cx="92" cy="92" r="9" />
+      <circle cx="18" cy="92" r="9" />
+    </g>
+
+    <!-- Bottom spherical shadow -->
+    <rect x="0" y="0" width="110" height="110" fill="url(#sphereShadow)" />
+
+    <!-- Top specular shine -->
+    <rect x="0" y="0" width="110" height="110" fill="url(#outerSpecular)" />
+
+    <!-- Inner circle disc with 3D gradient -->
+    <g clip-path="url(#innerClip)">
+      <rect x="0" y="0" width="110" height="110" fill="url(#innerDisc)" />
+
+      <!-- Subtle inner split tint matching ball 5 -->
+      <polygon points="-10,-10 75,-10 35,120 -10,120" fill="#ef4444" fill-opacity="0.14" />
+      <polygon points="75,-10 120,-10 120,120 35,120" fill="#a855f7" fill-opacity="0.22" />
+
+      <!-- Inner rim shadow for depth -->
+      <circle cx="55" cy="55" r="37.5" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="2" />
+
+      <!-- Digit "0" split in Red (left) and Violet (right) -->
+      <!-- Left Red 0 -->
+      <g clip-path="url(#leftHalfClip)">
+        <text
+          x="55"
+          y="56"
+          font-family="system-ui, -apple-system, 'SF Pro Display', 'Roboto', 'Arial Black', sans-serif"
+          font-size="48"
+          font-weight="900"
+          text-anchor="middle"
+          dominant-baseline="central"
+          fill="#dc2626"
+        >0</text>
+      </g>
+
+      <!-- Right Violet 0 -->
+      <g clip-path="url(#rightHalfClip)">
+        <text
+          x="55"
+          y="56"
+          font-family="system-ui, -apple-system, 'SF Pro Display', 'Roboto', 'Arial Black', sans-serif"
+          font-size="48"
+          font-weight="900"
+          text-anchor="middle"
+          dominant-baseline="central"
+          fill="#9333ea"
+        >0</text>
+      </g>
+
+      <!-- Inner disc top specular gloss -->
+      <rect x="0" y="0" width="110" height="110" fill="url(#innerGloss)" />
+    </g>
+  </g>
+</svg>
